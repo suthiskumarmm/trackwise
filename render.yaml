@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: trackwise-backend
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        value: trackwise_super_secret_key
+      - key: MONGO_URI
+        value: mongodb://suthis3003_db_user:FT6eumx6ybk2nGFX@ac-0qabngs-shard-00-00.5d1bguf.mongodb.net:27017,ac-0qabngs-shard-00-01.5d1bguf.mongodb.net:27017,ac-0qabngs-shard-00-02.5d1bguf.mongodb.net:27017/trackwise?tls=true&replicaSet=atlas-11gs8y-shard-0&authSource=admin&retryWrites=true&w=majority
