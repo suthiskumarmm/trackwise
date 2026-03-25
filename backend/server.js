@@ -1,11 +1,9 @@
 const express = require('express');
-const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
 
-// Middleware
 app.use(cors({
   origin: ['https://trackwise-sage.vercel.app', 'http://localhost:3000'],
   credentials: true
@@ -18,29 +16,25 @@ app.use('/api/expenses', require('./routes/expenses'));
 app.use('/api/groups', require('./routes/groups'));
 app.use('/api/analytics', require('./routes/analytics'));
 app.use('/api/users', require('./routes/users'));
-
-// Health check
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
-// Connect to MongoDB and start server
 const PORT = process.env.PORT || 5000;
 
-// Start server immediately, don't wait for MongoDB
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+const startServer = () => app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
-// Connect to MongoDB with retries
-const connectDB = async () => {
-  try {
-    await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/trackwise', {
-      serverSelectionTimeoutMS: 30000,
-      family: 4
-    });
-    console.log('MongoDB connected');
-  } catch (err) {
-    console.error('MongoDB connection error:', err.message);
-    console.log('Retrying in 5 seconds...');
-    setTimeout(connectDB, 5000);
-  }
-};
-
-connectDB();
+// Use MongoDB if MONGO_URI is set, otherwise use MySQL
+if (process.env.MONGO_URI) {
+  const mongoose = require('mongoose');
+  mongoose.connect(process.env.MONGO_URI)
+    .then(() => { console.log('MongoDB connected'); startServer(); })
+    .catch(err => { console.error('MongoDB error:', err.message); process.exit(1); });
+} else {
+  const sequelize = require('./config/database');
+  const User = require('./models/User');
+  const { Group, GroupMember, GroupExpense, GroupSplit } = require('./models/Group');
+  Group.belongsToMany(User, { through: GroupMember, as: 'members', foreignKey: 'groupId' });
+  User.belongsToMany(Group, { through: GroupMember, as: 'groups', foreignKey: 'userId' });
+  sequelize.sync({ alter: true })
+    .then(() => { console.log('MySQL connected and tables synced'); startServer(); })
+    .catch(err => { console.error('MySQL error:', err.message); process.exit(1); });
+}

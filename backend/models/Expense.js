@@ -1,19 +1,18 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
 
-const expenseSchema = new mongoose.Schema({
-  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  title: { type: String, required: true, trim: true },
-  amount: { type: Number, required: true },
-  type: { type: String, enum: ['expense', 'income'], default: 'expense' },
+const Expense = sequelize.define('Expense', {
+  id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+  userId: { type: DataTypes.INTEGER, allowNull: false },
+  title: { type: DataTypes.STRING, allowNull: false },
+  amount: { type: DataTypes.FLOAT, allowNull: false },
+  type: { type: DataTypes.ENUM('expense', 'income'), defaultValue: 'expense' },
   category: {
-    type: String,
-    enum: ['Food', 'Travel', 'Bills', 'Shopping', 'Entertainment', 'Health', 'Education', 'Other'],
-    default: 'Other'
+    type: DataTypes.ENUM('Food','Travel','Bills','Shopping','Entertainment','Health','Education','Other'),
+    defaultValue: 'Other'
   },
-  description: { type: String, default: '' },
-  date: { type: Date, default: Date.now },
-  tags: [String],
-  group: { type: mongoose.Schema.Types.ObjectId, ref: 'Group', default: null }
-}, { timestamps: true });
+  description: { type: DataTypes.TEXT, defaultValue: '' },
+  date: { type: DataTypes.DATE, defaultValue: DataTypes.NOW }
+}, { tableName: 'expenses' });
 
-module.exports = mongoose.model('Expense', expenseSchema);
+module.exports = Expense;

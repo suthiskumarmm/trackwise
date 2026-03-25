@@ -1,27 +1,35 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
 
-const splitSchema = new mongoose.Schema({
-  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  amount: Number,
-  paid: { type: Boolean, default: false }
-});
+const Group = sequelize.define('Group', {
+  id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+  name: { type: DataTypes.STRING, allowNull: false },
+  description: { type: DataTypes.TEXT, defaultValue: '' },
+  createdBy: { type: DataTypes.INTEGER, allowNull: false }
+}, { tableName: 'groups' });
 
-const groupExpenseSchema = new mongoose.Schema({
-  title: { type: String, required: true },
-  amount: { type: Number, required: true },
-  paidBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  splits: [splitSchema],
-  date: { type: Date, default: Date.now },
-  category: { type: String, default: 'Other' },
-  description: { type: String, default: '' }
-});
+const GroupMember = sequelize.define('GroupMember', {
+  groupId: { type: DataTypes.INTEGER, allowNull: false },
+  userId: { type: DataTypes.INTEGER, allowNull: false }
+}, { tableName: 'group_members', timestamps: false });
 
-const groupSchema = new mongoose.Schema({
-  name: { type: String, required: true, trim: true },
-  description: { type: String, default: '' },
-  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  members: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-  expenses: [groupExpenseSchema]
-}, { timestamps: true });
+const GroupExpense = sequelize.define('GroupExpense', {
+  id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+  groupId: { type: DataTypes.INTEGER, allowNull: false },
+  title: { type: DataTypes.STRING, allowNull: false },
+  amount: { type: DataTypes.FLOAT, allowNull: false },
+  paidBy: { type: DataTypes.INTEGER, allowNull: false },
+  category: { type: DataTypes.STRING, defaultValue: 'Other' },
+  description: { type: DataTypes.TEXT, defaultValue: '' },
+  date: { type: DataTypes.DATE, defaultValue: DataTypes.NOW }
+}, { tableName: 'group_expenses' });
 
-module.exports = mongoose.model('Group', groupSchema);
+const GroupSplit = sequelize.define('GroupSplit', {
+  id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+  groupExpenseId: { type: DataTypes.INTEGER, allowNull: false },
+  userId: { type: DataTypes.INTEGER, allowNull: false },
+  amount: { type: DataTypes.FLOAT, allowNull: false },
+  paid: { type: DataTypes.BOOLEAN, defaultValue: false }
+}, { tableName: 'group_splits', timestamps: false });
+
+module.exports = { Group, GroupMember, GroupExpense, GroupSplit };
